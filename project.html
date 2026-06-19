@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+:root{--primary-color:#00d4ff;--secondary-color:#7c3aed;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Inter",sans-serif;background:#0c0c10;color:#fff;}
+</style>
+</head><body>
+<!-- ============================================================
+     PROJECT SHOWCASE — Editorial Mosaic
+     Bigger rectangular cards (16:10, object-fit:contain so nothing
+     crops), asymmetric 12-col mosaic grid (wide / standard / tall
+     mix) instead of a uniform 3-up grid. GSAP scroll reveal with
+     stagger. 12 real projects. Self-contained: CSS scoped `show-`,
+     JS in its own IIFE. Drop anywhere in <main>.
+     ============================================================ -->
+
+<section id="showcase" class="show-section">
+  <div class="show-head">
+    <div class="show-head-left">
+      <span class="show-eyebrow">Selected Work</span>
+      <h2 class="show-title">Project Showcase</h2>
+    </div>
+    <div class="show-head-right">
+      <span class="show-count"><span id="showCount">12</span> projects shipped</span>
+    </div>
+  </div>
+
+  <div class="show-grid" id="showGrid"></div>
+</section>
+
+<style>
+  .show-section {
+    --show-accent: var(--primary-color, #00d4ff);
+    --show-bg: #0c0c10;
+    --show-border: rgba(255,255,255,0.09);
+    --show-border-hover: rgba(255,255,255,0.24);
+    --show-text-dim: rgba(255,255,255,0.55);
+    position: relative;
+    padding: 130px 5vw 120px;
+    background: var(--show-bg);
+  }
+
+  .show-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--show-border);
+    padding-bottom: 30px;
+    margin-bottom: 48px;
+  }
+  .show-eyebrow {
+    display: block;
+    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--show-accent);
+    margin-bottom: 14px;
+  }
+  .show-title {
+    font-size: clamp(2.3rem, 3.8vw, 3.4rem);
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+  .show-count {
+    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+    font-size: 0.85rem;
+    color: var(--show-text-dim);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- asymmetric mosaic: 12-column track, mixed spans ---------- */
+  .show-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 28px;
+  }
+
+  /* span pattern (repeats every 4 cards): all horizontal rectangles,
+     just two widths so the grid still breathes without going vertical */
+  .show-card[data-span="wide"] { grid-column: span 8; }
+  .show-card[data-span="std"]  { grid-column: span 4; }
+
+  .show-card {
+    position: relative;
+    background: #111116;
+    border: 1px solid var(--show-border);
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .show-card[data-span="wide"] { aspect-ratio: 16 / 9; }
+  .show-card[data-span="std"]  { aspect-ratio: 16 / 11; }
+
+  .show-card:hover {
+    border-color: var(--show-border-hover);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.5);
+  }
+
+  .show-card-index {
+    position: absolute;
+    top: 20px; left: 20px; z-index: 3;
+    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.05em;
+    background: rgba(8,8,11,0.55);
+    padding: 4px 9px;
+    border-radius: 30px;
+    backdrop-filter: blur(4px);
+  }
+
+  .show-card-imgwrap {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    background: #161620;
+    overflow: hidden;
+  }
+  .show-card-img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    object-position: center;
+    filter: brightness(0.95);
+    transition: filter 0.4s ease, transform 0.5s ease;
+  }
+  .show-card:hover .show-card-img {
+    filter: brightness(1.06);
+    transform: scale(1.015);
+  }
+
+  .show-card-info {
+    position: relative; z-index: 2;
+    padding: 20px 22px 22px;
+    background: rgba(8,8,11,0.85);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid var(--show-border);
+  }
+
+  .show-card-tag {
+    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--show-accent);
+    display: block;
+    margin-bottom: 7px;
+    opacity: 0.9;
+  }
+
+  .show-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  .show-card-tech {
+    font-size: 0.88rem;
+    color: var(--show-text-dim);
+    letter-spacing: 0.01em;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.3s ease;
+  }
+  .show-card:hover .show-card-tech { max-height: 40px; opacity: 1; margin-top: 6px; }
+
+  .show-card-arrow {
+    position: absolute; top: 20px; right: 20px; z-index: 3;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--show-border-hover);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.1rem;
+    background: rgba(12,12,16,0.5);
+    opacity: 0;
+    transform: scale(0.85);
+    transition: all 0.3s ease;
+  }
+  .show-card:hover .show-card-arrow {
+    opacity: 1; transform: scale(1);
+    background: var(--show-accent); border-color: var(--show-accent); color: var(--show-bg);
+  }
+
+  .show-card::after {
+    content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+    border: 1px solid transparent; transition: border-color 0.3s ease;
+  }
+  .show-card:hover::after { border-color: var(--show-accent); }
+
+  /* ---------- responsive: collapse mosaic to single column on small screens ---------- */
+  @media (max-width: 1000px) {
+    .show-grid { grid-template-columns: repeat(4, 1fr); gap: 22px; }
+    .show-card[data-span="wide"] { grid-column: span 4; aspect-ratio: 16/9; }
+    .show-card[data-span="std"]  { grid-column: span 4; aspect-ratio: 16/10; }
+  }
+  @media (max-width: 560px) {
+    .show-section { padding: 90px 18px 80px; }
+    .show-head { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .show-grid { grid-template-columns: 1fr; gap: 18px; }
+    .show-card, .show-card[data-span="wide"], .show-card[data-span="std"] {
+      grid-column: span 1; aspect-ratio: 16/11; border-radius: 14px;
+    }
+    .show-card-tech { max-height: 40px; opacity: 1; margin-top: 6px; }
+    .show-card-arrow { opacity: 1; transform: scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .show-card, .show-card-img, .show-card-tech, .show-card-arrow { transition: none !important; }
+  }
+</style>
+
+<script>
+(function () {
+  const items = [
+    { title: "Terriberi — CEO Bootcamp Kits", tag: "Shopify", tech: "Custom Liquid · CRO", img: "https://uploads.onecompiler.io/43kc4ujua/1781854636890/Screenshot%202026-06-19%20130536.png", link: "https://terriberi.com/" },
+    { title: "Little Breaks", tag: "Shopify", tech: "Zoorix · Bundles", img: "https://uploads.onecompiler.io/43kc4ujua/1781854772666/Screenshot%202026-06-19%20130921.png", link: "https://littlebreaks.in/" },
+    { title: "Trytoy", tag: "E-commerce", tech: "Express Delivery · CRO", img: "https://uploads.onecompiler.io/43kc4ujua/1781855053069/Screenshot%202026-06-19%20131405.png", link: "https://trytoy.com/" },
+    { title: "Vandelay Stonetops", tag: "Marketing Site", tech: "SCSS · Locomotive", img: "https://uploads.onecompiler.io/43kc4ujua/44da8gskw/Screenshot%202026-02-11%20163340.png", link: "https://vandelaystonetops.com/" },
+    { title: "Commerce Dashboard", tag: "Dashboard", tech: "React · TypeScript", img: "https://uploads.onecompiler.io/43kc4ujua/1781855312656/Screenshot%202026-06-19%20131818.png", link: "https://e-commerce-henna-alpha-25.vercel.app/" },
+    { title: "3D Interactive Portfolio", tag: "Experimental", tech: "Three.js · WebGL", img: "https://uploads.onecompiler.io/43kc4ujua/44da8gskw/Screenshot%202026-02-11%20163042.png", link: "https://123webdesigner.com/" },
+    { title: "Pocketshop", tag: "Shopify", tech: "E-commerce · CRO", img: "https://uploads.onecompiler.io/43kc4ujua/1781857076165/Screenshot%202026-06-19%20134743.png", link: "https://pocketshop.co.in/" },
+    { title: "Fun Fun", tag: "Shopify", tech: "E-commerce", img: "https://uploads.onecompiler.io/43kc4ujua/1781857239489/Screenshot%202026-06-19%20135029.png", link: "https://funfun.in/" },
+    { title: "Comiclyfe", tag: "Shopify", tech: "E-commerce", img: "https://uploads.onecompiler.io/43kc4ujua/1781857361443/Screenshot%202026-06-19%20135232.png", link: "https://comiclyfe.com/" },
+    { title: "Memorylane", tag: "Shopify", tech: "Theme Customization", img: "https://uploads.onecompiler.io/43kc4ujua/1781857406443/Screenshot%202026-06-19%20135318.png", link: "https://memorylane.in/" },
+    { title: "Danny X", tag: "WooCommerce", tech: "Custom Sections · Reels Feed", img: "https://uploads.onecompiler.io/43kc4ujua/1781857502842/Screenshot%202026-06-19%20135455.png", link: "https://danny-x.com/" },
+    { title: "Tiny Miny Mo", tag: "Shopify", tech: "E-commerce", img: "https://uploads.onecompiler.io/43kc4ujua/1781857583062/Screenshot%202026-06-19%20135616.png", link: "https://www.tinyminymo.com/" }
+  ];
+
+  // span pattern, repeats every 4 cards: all horizontal, just alternating widths
+  const pattern = ["wide", "std", "std", "wide"];
+
+  const grid = document.getElementById("showGrid");
+  const countEl = document.getElementById("showCount");
+  if (!grid) return;
+  if (countEl) countEl.textContent = items.length;
+
+  grid.innerHTML = items.map((p, i) => `
+    <article class="show-card" data-span="${pattern[i % pattern.length]}">
+      <span class="show-card-index">${String(i + 1).padStart(2, "0")}</span>
+      <a class="show-card-arrow" href="${p.link}" target="_blank" rel="noopener" aria-label="Open ${p.title}">
+        <i class="ph-light ph-arrow-up-right"></i>
+      </a>
+      <div class="show-card-imgwrap">
+        <img class="show-card-img" src="${p.img}" alt="${p.title}" loading="lazy">
+      </div>
+      <div class="show-card-info">
+        <span class="show-card-tag">${p.tag}</span>
+        <h3 class="show-card-title">${p.title}</h3>
+        <p class="show-card-tech">${p.tech}</p>
+      </div>
+    </article>
+  `).join("");
+
+  const cards = Array.from(grid.children);
+
+  // GSAP scroll reveal with stagger; falls back to IntersectionObserver if GSAP isn't loaded
+  if (window.gsap && window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray(cards).forEach((card, i) => {
+      gsap.to(card, {
+        opacity: 1,
+        y: 0,
+        duration: 0.7,
+        ease: "power3.out",
+        delay: (i % 3) * 0.08,
+        scrollTrigger: {
+          trigger: card,
+          start: "top 90%",
+          toggleActions: "play none none none"
+        }
+      });
+    });
+  } else {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+          entry.target.style.opacity = "1";
+          entry.target.style.transform = "translateY(0)";
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    cards.forEach(card => io.observe(card));
+  }
+})();
+</script>
+</body></html>
